@@ -1,5 +1,5 @@
 use crate::{grammar::Grammar, Error, Execute, Result, Rule};
-use rand::{seq::SliceRandom, Rng};
+use rand::{seq::IteratorRandom, Rng};
 
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) struct Action {
@@ -46,7 +46,7 @@ impl Tag {
         match &self.key {
             Some(key) => {
                 let rule = match grammar.get_rule(key) {
-                    Some(rules) => Ok(rules.choose(rng).unwrap().clone()),
+                    Some(rules) => Ok(rules.into_iter().choose(rng).unwrap().clone()),
                     None => Err(Error::MissingKeyError(key.clone())),
                 }?;
                 rule.execute(grammar, rng)
@@ -115,7 +115,7 @@ mod tests {
         let input = hashmap! { "a" => vec!["b"] };
         let mut g = Grammar::from_map(input)?;
         let tag = parse_tag("#a#")?;
-        let r = tag.get_rule(&mut g, &mut rand::thread_rng())?;
+        let r = tag.get_rule(&mut g, &mut rand::rng())?;
         assert_eq!(r, "b");
         Ok(())
     }
@@ -125,7 +125,7 @@ mod tests {
         let input = hashmap! { "a" => vec!["b"] };
         let mut g = Grammar::from_map(input)?;
         let tag = parse_tag("#b#")?;
-        let r = tag.get_rule(&mut g, &mut rand::thread_rng());
+        let r = tag.get_rule(&mut g, &mut rand::rng());
         assert!(matches!(r, Err(Error::MissingKeyError(_))));
         Ok(())
     }

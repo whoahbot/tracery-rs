@@ -1,5 +1,6 @@
 use lazy_static::lazy_static;
-use rand::{seq::SliceRandom, Rng};
+use rand::seq::IteratorRandom;
+use rand::Rng;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
@@ -75,7 +76,7 @@ impl Grammar {
     ///     "description": [ "fun", "awesome" ]
     /// }"##;
     /// let g = Grammar::from_json(json)?;
-    /// # let output = g.flatten(&mut rand::thread_rng())?;
+    /// # let output = g.flatten(&mut rand::rng())?;
     /// # assert!(match output.as_str() {
     /// #     "tracery is fun!" | "tracery is awesome!" => true,
     /// #     _ => false,
@@ -114,7 +115,7 @@ impl Grammar {
     ///     "tool" => "tracery",
     ///     "description" => [ "fun", "awesome" ]
     /// }?.with_default_rule("start");
-    /// # let output = g.flatten(&mut rand::thread_rng())?;
+    /// # let output = g.flatten(&mut rand::rng())?;
     /// # assert!(match output.as_str() {
     /// #     "tracery is fun!" | "tracery is awesome!" => true,
     /// #     _ => false,
@@ -140,7 +141,7 @@ impl Grammar {
     ///     "description" => [ "fun", "awesome" ]
     /// }?;
     /// g.set_default_rule("start");
-    /// # let output = g.flatten(&mut rand::thread_rng())?;
+    /// # let output = g.flatten(&mut rand::rng())?;
     /// # assert!(match output.as_str() {
     /// #     "tracery is fun!" | "tracery is awesome!" => true,
     /// #     _ => false,
@@ -173,7 +174,7 @@ impl Grammar {
     /// }?;
     ///
     /// // Generate output (either "tracery is fun!" or "tracery is awesome!")
-    /// let output = g.flatten(&mut rand::thread_rng())?;
+    /// let output = g.flatten(&mut rand::rng())?;
     /// # assert!(match output.as_str() {
     /// #     "tracery is fun!" | "tracery is awesome!" => true,
     /// #     _ => false,
@@ -209,7 +210,7 @@ impl Grammar {
     ///
     /// // Generate output (either "tracery is fun!" or "tracery is awesome!")
     /// let key = String::from("origin");
-    /// let output = g.execute(&key, &mut rand::thread_rng())?;
+    /// let output = g.execute(&key, &mut rand::rng())?;
     /// # assert!(match output.as_str() {
     /// #     "tracery is fun!" | "tracery is awesome!" => true,
     /// #     _ => false,
@@ -233,7 +234,7 @@ impl Grammar {
     ///
     /// // Generate output (either "tracery is fun!" or "tracery is awesome!")
     /// let key = String::from("origin");
-    /// let output = g.execute(&key, &mut rand::thread_rng())?;
+    /// let output = g.execute(&key, &mut rand::rng())?;
     /// # assert!(match output.as_str() {
     /// #     "tracery is fun!" | "tracery is awesome!" => true,
     /// #     _ => false,
@@ -242,7 +243,7 @@ impl Grammar {
     /// // The previous call to execute created the 'aside' rule
     /// let key = String::from("aside");
     /// // Generates the string "Rust is, too"
-    /// let output = g.execute(&key, &mut rand::thread_rng())?;
+    /// let output = g.execute(&key, &mut rand::rng())?;
     /// # assert!(match output.as_str() {
     /// #     "Rust is, too" => true,
     /// #     _ => false,
@@ -257,7 +258,13 @@ impl Grammar {
         R: ?Sized + Rng,
     {
         let rule = match self.map.get(key) {
-            Some(rules) => Ok(rules.last().unwrap().choose(rng).unwrap().clone()),
+            Some(rules) => Ok(rules
+                .last()
+                .unwrap()
+                .into_iter()
+                .choose(rng)
+                .unwrap()
+                .clone()),
             None => Err(Error::MissingKeyError(key.clone())),
         }?;
         rule.execute(self, rng)
@@ -276,7 +283,7 @@ impl Grammar {
     ///     "description" => vec![ "fun", "awesome" ]
     /// };
     /// let g = tracery::from_map(map)?;
-    /// # let output = g.flatten(&mut rand::thread_rng())?;
+    /// # let output = g.flatten(&mut rand::rng())?;
     /// # assert!(match output.as_str() {
     /// #     "tracery is fun!" | "tracery is awesome!" => true,
     /// #     _ => false,
@@ -296,7 +303,7 @@ impl Grammar {
     ///                 ("tool", vec![ "tracery" ]),
     ///                 ("description", vec![ "fun", "awesome" ]) ];
     /// let g = tracery::from_map(map)?;
-    /// # let output = g.flatten(&mut rand::thread_rng())?;
+    /// # let output = g.flatten(&mut rand::rng())?;
     /// # assert!(match output.as_str() {
     /// #     "tracery is fun!" | "tracery is awesome!" => true,
     /// #     _ => false,
@@ -340,7 +347,7 @@ mod tests {
             "a" => vec![ "a", "aa", "aaa" ]
         };
         let g = Grammar::from_map(input)?;
-        let res = g.flatten(&mut rand::thread_rng());
+        let res = g.flatten(&mut rand::rng());
         assert!(matches!(res, Err(Error::MissingKeyError(_))));
 
         Ok(())
@@ -352,7 +359,7 @@ mod tests {
             "a" => vec![ "a", "aa", "aaa" ]
         };
         let g = Grammar::from_map(input)?.with_default_rule("a");
-        let res = g.flatten(&mut rand::thread_rng())?;
+        let res = g.flatten(&mut rand::rng())?;
         assert_eq!(res.chars().next().unwrap(), 'a');
 
         Ok(())
@@ -365,7 +372,7 @@ mod tests {
         };
         let mut g = Grammar::from_map(input)?;
         g.set_default_rule("a");
-        let res = g.flatten(&mut rand::thread_rng())?;
+        let res = g.flatten(&mut rand::rng())?;
         assert_eq!(res.chars().next().unwrap(), 'a');
 
         Ok(())
@@ -378,7 +385,7 @@ mod tests {
             "origin": [ "a", "aa" ]
         }"#;
         let g = Grammar::from_json(x)?;
-        let res = g.flatten(&mut rand::thread_rng())?;
+        let res = g.flatten(&mut rand::rng())?;
         assert_eq!(res.chars().next().unwrap(), 'a');
 
         Ok(())
@@ -394,11 +401,11 @@ mod tests {
 
         // The first invocation should produce the string baz from the rule baz
         let origin = String::from("origin");
-        assert_eq!("baz", grammar.execute(&origin, &mut rand::thread_rng())?);
+        assert_eq!("baz", grammar.execute(&origin, &mut rand::rng())?);
 
         // It should have also produced a new rule foo with the value bar
         let origin = String::from("foo");
-        assert_eq!("bar", grammar.execute(&origin, &mut rand::thread_rng())?);
+        assert_eq!("bar", grammar.execute(&origin, &mut rand::rng())?);
 
         Ok(())
     }
@@ -414,19 +421,19 @@ mod tests {
 
         // The first invocation should produce the string baz from the rule baz
         let origin = String::from("origin");
-        assert_eq!("baz", grammar.execute(&origin, &mut rand::thread_rng())?);
+        assert_eq!("baz", grammar.execute(&origin, &mut rand::rng())?);
 
         // It should have also produced a new rule foo with the value bar
         let origin = String::from("foo");
-        assert_eq!("bar", grammar.execute(&origin, &mut rand::thread_rng())?);
+        assert_eq!("bar", grammar.execute(&origin, &mut rand::rng())?);
 
         // ..and a new rule bar with the value baz
         let origin = String::from("bar");
-        assert_eq!("baz", grammar.execute(&origin, &mut rand::thread_rng())?);
+        assert_eq!("baz", grammar.execute(&origin, &mut rand::rng())?);
 
         // ..aaaand a new rule qux with the value quux
         let origin = String::from("qux");
-        assert_eq!("quux", grammar.execute(&origin, &mut rand::thread_rng())?);
+        assert_eq!("quux", grammar.execute(&origin, &mut rand::rng())?);
 
         Ok(())
     }
@@ -440,7 +447,7 @@ mod tests {
         let mut grammar = Grammar::from_map(input)?;
         assert_eq!(
             "bazbar",
-            grammar.execute(&String::from("origin"), &mut rand::thread_rng())?
+            grammar.execute(&String::from("origin"), &mut rand::rng())?
         );
         Ok(())
     }
@@ -453,7 +460,7 @@ mod tests {
             "popFoo" => vec!["[foo:POP]"]
         };
         let mut grammar = Grammar::from_map(input)?;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let origin = String::from("origin");
         assert_eq!("bar", grammar.execute(&origin, &mut rng)?);
         let origin = String::from("foo");

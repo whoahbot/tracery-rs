@@ -30,7 +30,7 @@
 //!     "tool" => "tracery",
 //!     "description" => [ "fun", "awesome" ]
 //! }?;
-//! # let output = g.flatten(&mut rand::thread_rng())?;
+//! # let output = g.flatten(&mut rand::rng())?;
 //! # assert!(match output.as_str() {
 //! #     "tracery is fun!" | "tracery is awesome!" => true,
 //! #     _ => false,
@@ -54,7 +54,7 @@
 //!     "description" => vec![ "fun", "awesome" ]
 //! };
 //! let g = tracery::from_map(map)?;
-//! # let output = g.flatten(&mut rand::thread_rng())?;
+//! # let output = g.flatten(&mut rand::rng())?;
 //! # assert!(match output.as_str() {
 //! #     "tracery is fun!" | "tracery is awesome!" => true,
 //! #     _ => false,
@@ -90,7 +90,7 @@
 //!     "description": [ "fun", "awesome" ]
 //! }"##;
 //! let g = tracery::from_json(json)?;
-//! # let output = g.flatten(&mut rand::thread_rng())?;
+//! # let output = g.flatten(&mut rand::rng())?;
 //! # assert!(match output.as_str() {
 //! #     "tracery is fun!" | "tracery is awesome!" => true,
 //! #     _ => false,
@@ -120,7 +120,7 @@
 //!
 //! // Generate an output (either "tracery is fun!" or "tracery is awesome!")
 //! let key = String::from("origin");
-//! let output = g.execute(&key, &mut rand::thread_rng())?;
+//! let output = g.execute(&key, &mut rand::rng())?;
 //! # assert!(match output.as_str() {
 //! #     "tracery is fun!" | "tracery is awesome!" => true,
 //! #     _ => false,
@@ -147,7 +147,7 @@
 //!
 //! // Generate an output (either "tracery is fun!" or "tracery is awesome!")
 //! let key = String::from("origin");
-//! let output = g.execute(&key, &mut rand::thread_rng())?;
+//! let output = g.execute(&key, &mut rand::rng())?;
 //! # assert!(match output.as_str() {
 //! #     "tracery is fun!" | "tracery is awesome!" => true,
 //! #     _ => false,
@@ -156,7 +156,7 @@
 //! // The previous call to execute created the 'aside' rule
 //! let key = String::from("aside");
 //! // Generates the string "Rust is, too"
-//! let output = g.execute(&key, &mut rand::thread_rng())?;
+//! let output = g.execute(&key, &mut rand::rng())?;
 //! # assert!(match output.as_str() {
 //! #     "Rust is, too" => true,
 //! #     _ => false,
@@ -183,7 +183,7 @@
 //! }?;
 //!
 //! // Generate an output (either "tracery is fun!" or "tracery is awesome!")
-//! let output = g.flatten(&mut rand::thread_rng())?;
+//! let output = g.flatten(&mut rand::rng())?;
 //! # assert!(match output.as_str() {
 //! #     "tracery is fun!" | "tracery is awesome!" => true,
 //! #     _ => false,
@@ -306,7 +306,7 @@ macro_rules! grammar_count {
 ///
 /// // Randomly produce the string "tracery is fun!" or "tracery is awesome!"
 /// # let output =
-/// g.flatten(&mut rand::thread_rng())?;
+/// g.flatten(&mut rand::rng())?;
 ///
 /// # assert!(match output.as_str() {
 /// #     "tracery is fun!" | "tracery is awesome!" => true,
@@ -345,7 +345,7 @@ macro_rules! grammar {
 ///     "description": [ "fun", "awesome" ]
 /// }"##;
 /// let g = tracery::from_json(json)?;
-/// # let output = g.flatten(&mut rand::thread_rng())?;
+/// # let output = g.flatten(&mut rand::rng())?;
 /// # assert!(match output.as_str() {
 /// #     "tracery is fun!" | "tracery is awesome!" => true,
 /// #     _ => false,
@@ -376,7 +376,7 @@ pub fn from_json<S: AsRef<str>>(s: S) -> Result<Grammar> {
 ///     "description" => vec![ "fun", "awesome" ]
 /// };
 /// let g = tracery::from_map(map)?;
-/// # let output = g.flatten(&mut rand::thread_rng())?;
+/// # let output = g.flatten(&mut rand::rng())?;
 /// # assert!(match output.as_str() {
 /// #     "tracery is fun!" | "tracery is awesome!" => true,
 /// #     _ => false,
@@ -425,7 +425,7 @@ where
 /// [`String`]: https://doc.rust-lang.org/std/string/struct.String.html
 #[cfg(feature = "tracery_json")]
 pub fn flatten_json<S: AsRef<str>>(s: S) -> Result<String> {
-    from_json(s)?.execute(&crate::grammar::ORIGIN, &mut rand::thread_rng())
+    from_json(s)?.execute(&crate::grammar::ORIGIN, &mut rand::rng())
 }
 
 /// Creates a new grammar from an input map, then uses it to create a random
@@ -461,7 +461,7 @@ where
     C: IntoIterator<Item = S>,
     S: Into<String>,
 {
-    from_map(iter)?.execute(&crate::grammar::ORIGIN, &mut rand::thread_rng())
+    from_map(iter)?.execute(&crate::grammar::ORIGIN, &mut rand::rng())
 }
 
 /// A convenience type for a `Result` of `T` or [`Error`]
@@ -484,7 +484,7 @@ mod tests {
             "origin" => "#foo#",
             "foo" => ["a", "aa"]
         }?;
-        let res = g.flatten(&mut rand::thread_rng())?;
+        let res = g.flatten(&mut rand::rng())?;
         assert_eq!(res.chars().next().unwrap(), 'a');
         Ok(())
     }
@@ -508,7 +508,7 @@ mod tests {
             "origin" => vec!["#[hero:#name#][heroPet:#animal#]story#"]
         };
         let g = from_map(source)?;
-        g.flatten(&mut rand::thread_rng())?;
+        g.flatten(&mut rand::rng())?;
         Ok(())
     }
 
@@ -537,7 +537,7 @@ mod tests {
                 "origin": ["#[hero:#name#][heroPet:#animal#]story#"]
             }"##;
         let g = from_json(source)?;
-        g.flatten(&mut rand::thread_rng())?;
+        g.flatten(&mut rand::rng())?;
         Ok(())
     }
 
